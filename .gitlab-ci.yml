@@ -1,0 +1,41 @@
+variables:
+  IMAGE_NAME: buffalo147/dev-apps
+  IMAGE_TAG: movie-app
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - echo "Logging in to Docker registry..."
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS
+  script:
+    - echo "Building Docker image..."
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - echo "Pushing Docker image to registry..."
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh
+    - echo "$SSH_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+  script:
+    - echo "Deploying containerized app..."
+    - |
+      ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@$LINODE_SERVER "
+        docker login -u $REGISTRY_USER -p $REGISTRY_PASS &&
+        docker pull $IMAGE_NAME:$IMAGE_TAG &&
+        docker stop movie-app || true &&
+        docker rm movie-app || true &&
+        docker run -d --name movie-app -p 80:80 $IMAGE_NAME:$IMAGE_TAG
+      "
