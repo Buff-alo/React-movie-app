@@ -29,7 +29,7 @@ deploy:
     - apk add --no-cache openssh
     - mkdir -p ~/.ssh
     - echo "$SSH_KEY" > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
+    - chmod 400 ~/.ssh/id_rsa
     - ssh-keyscan -H $LINODE_SERVER >> ~/.ssh/known_hosts
   script:
     - echo "Deploying containerized app..."
