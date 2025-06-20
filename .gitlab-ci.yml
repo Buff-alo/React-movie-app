@@ -30,6 +30,7 @@ deploy:
     - mkdir -p ~/.ssh
     - echo "$SSH_KEY" > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -H $LINODE_SERVER >> ~/.ssh/known_hosts
   script:
     - echo "Deploying containerized app..."
     - |
