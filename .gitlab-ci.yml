@@ -38,9 +38,9 @@ build:
 
 deploy:
   stage: deploy
-  image: debian:bullseye-slim  # better base image for ssh support
+  image: alpine:latest # better base image for ssh support
   before_script:
-    - apt-get update && apt-get install -y openssh-client
+    - apk add --no-cache openssh-client
     - mkdir -p ~/.ssh
     - cp "$SSH_KEY" ~/.ssh/id_rsa
     - chmod 400 ~/.ssh/id_rsa
