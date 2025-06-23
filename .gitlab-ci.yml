@@ -61,7 +61,7 @@ deploy:
         docker run -d \
           --name movie-app \
           --label 'traefik.enable=true' \
-          --label \"traefik.http.routers.movie.rule=Host(\`stream.kwadwolabs.cloud\`)\" \
+          --label "traefik.http.routers.movie.rule=Host(\\`stream.kwadwolabs.cloud\\`)" \ 
           --label 'traefik.http.routers.movie.entrypoints=websecure' \
           --label 'traefik.http.routers.movie.tls.certresolver=myresolver' \
           --label 'traefik.http.services.movie.loadbalancer.server.port=80' \
