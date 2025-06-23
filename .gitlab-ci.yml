@@ -24,16 +24,19 @@ build:
 
 deploy:
   stage: deploy
-  image: alpine:latest # alpine/git is better as it includes ssh-client by default
+  image: alpine/git  # better base image for ssh support
   before_script:
-    - apk add --no-cache openssh-client # Explicitly install openssh-client, not the full openssh package
-    - mkdir -p ~/.ssh
-    - echo "$SSH_KEY" > ~/.ssh/id_rsa
-    - chmod 400 ~/.ssh/id_rsa
+    - apk add --no-cache openssh-client
+    - |
+      mkdir -p ~/.ssh
+      cat <<EOF > ~/.ssh/id_rsa
+      $SSH_KEY
+      EOF
+      chmod 400 ~/.ssh/id_rsa
     - ssh-keyscan -H $LINODE_SERVER >> ~/.ssh/known_hosts
   script:
     - echo "Deploying containerized app..."
-    - | # This uses a "literal block" for the multi-line command
+    - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@$LINODE_SERVER '
         docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASS" &&
         docker pull "$IMAGE_NAME:$IMAGE_TAG" &&
@@ -47,4 +50,4 @@ deploy:
           --label "traefik.http.routers.movie.tls.certresolver=myresolver" \
           --label "traefik.http.services.movie.loadbalancer.server.port=80" \
           "$IMAGE_NAME:$IMAGE_TAG"
-      ' 
+      '
