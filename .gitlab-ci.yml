@@ -38,7 +38,7 @@ build:
 
 deploy:
   stage: deploy
-  image: alpine:latest  # better base image for ssh support
+  image: alpine:edge  # better base image for ssh support
   before_script:
     - apk add --no-cache openssh-client  # Keep only necessary package
     - mkdir -p ~/.ssh
