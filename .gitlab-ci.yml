@@ -22,32 +22,47 @@ build:
     - echo "Pushing Docker image to registry..."
     - docker push $IMAGE_NAME:$IMAGE_TAG
 
-deploy:
+debug_ssh:
   stage: deploy
-  image: debian:bullseye-slim  # better base image for ssh support
+  image: alpine:latest
   before_script:
-    - apt-get update && apt-get install -y openssh-client
+    - apk add --no-cache openssh-client file
+    - mkdir -p ~/.ssh
     - |
-      mkdir -p ~/.ssh
       cat <<EOF > ~/.ssh/id_rsa
       $SSH_KEY
       EOF
-      chmod 400 ~/.ssh/id_rsa
-    - ssh-keyscan -H $LINODE_SERVER >> ~/.ssh/known_hosts
+    - chmod 400 ~/.ssh/id_rsa
   script:
-    - echo "Deploying containerized app..."
-    - |
-      ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@$LINODE_SERVER '
-        docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASS" &&
-        docker pull "$IMAGE_NAME:$IMAGE_TAG" &&
-        docker stop movie-app || true &&
-        docker rm movie-app || true &&
-        docker run -d \
-          --name movie-app \
-          --label "traefik.enable=true" \
-          --label "traefik.http.routers.movie.rule=Host(`stream.kwadwolabs.cloud`)" \
-          --label "traefik.http.routers.movie.entrypoints=websecure" \
-          --label "traefik.http.routers.movie.tls.certresolver=myresolver" \
-          --label "traefik.http.services.movie.loadbalancer.server.port=80" \
-          "$IMAGE_NAME:$IMAGE_TAG"
-      '
+    - file ~/.ssh/id_rsa
+    - head -n 5 ~/.ssh/id_rsa
+
+# deploy:
+#   stage: deploy
+#   image: debian:bullseye-slim  # better base image for ssh support
+#   before_script:
+#     - apt-get update && apt-get install -y openssh-client
+#     - |
+#       mkdir -p ~/.ssh
+#       cat <<EOF > ~/.ssh/id_rsa
+#       $SSH_KEY
+#       EOF
+#       chmod 400 ~/.ssh/id_rsa
+#     - ssh-keyscan -H $LINODE_SERVER >> ~/.ssh/known_hosts
+#   script:
+#     - echo "Deploying containerized app..."
+#     - |
+#       ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@$LINODE_SERVER '
+#         docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASS" &&
+#         docker pull "$IMAGE_NAME:$IMAGE_TAG" &&
+#         docker stop movie-app || true &&
+#         docker rm movie-app || true &&
+#         docker run -d \
+#           --name movie-app \
+#           --label "traefik.enable=true" \
+#           --label "traefik.http.routers.movie.rule=Host(`stream.kwadwolabs.cloud`)" \
+#           --label "traefik.http.routers.movie.entrypoints=websecure" \
+#           --label "traefik.http.routers.movie.tls.certresolver=myresolver" \
+#           --label "traefik.http.services.movie.loadbalancer.server.port=80" \
+#           "$IMAGE_NAME:$IMAGE_TAG"
+#       '
