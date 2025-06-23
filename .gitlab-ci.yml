@@ -26,16 +26,15 @@ debug_ssh:
   stage: deploy
   image: alpine:latest
   before_script:
-    - apk add --no-cache openssh-client file
+    - apk add --no-cache openssh-client  # Removed 'file' package (not required)
     - mkdir -p ~/.ssh
-    - |
-      cat <<EOF > ~/.ssh/id_rsa
-      $SSH_KEY
-      EOF
+    # FIX: Use the file variable correctly by copying content
+    - cp "$SSH_KEY" ~/.ssh/id_rsa
     - chmod 400 ~/.ssh/id_rsa
   script:
+    # Verification commands
     - file ~/.ssh/id_rsa
-    - head -n 5 ~/.ssh/id_rsa
+    - head -n 5 ~/.ssh/id_rsa  # Should show key headers, not a file path
 
 # deploy:
 #   stage: deploy
