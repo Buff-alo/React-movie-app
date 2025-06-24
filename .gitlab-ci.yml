@@ -36,34 +36,61 @@ build:
 #     - head -n 1 ~/.ssh/id_rsa | grep -q "BEGIN" && echo "Valid key header found" || echo "Invalid key format"
 #     - head -n 5 ~/.ssh/id_rsa  # Original verification command
 
+# deploy:
+#   stage: deploy
+#   image: alpine:latest # better base image for ssh support
+#   before_script:
+#     - apk add --no-cache openssh-client
+#     - mkdir -p ~/.ssh
+#     - cp "$SSH_KEY" ~/.ssh/id_rsa
+#     - chmod 400 ~/.ssh/id_rsa
+#   script:
+#     - echo "Deploying containerized app..."
+#     # We will pass the necessary variables into the remote SSH session
+#     - |
+#       ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@$LINODE_SERVER "\
+#         REMOTE_IMAGE_NAME='$IMAGE_NAME'; \
+#         REMOTE_IMAGE_TAG='$IMAGE_TAG'; \
+#         REMOTE_REGISTRY_USER='$REGISTRY_USER'; \
+#         REMOTE_REGISTRY_PASS='$REGISTRY_PASS'; \
+#         \
+#         docker login -u \"\$REMOTE_REGISTRY_USER\" -p \"\$REMOTE_REGISTRY_PASS\" && \
+#         docker pull \"\$REMOTE_IMAGE_NAME:\$REMOTE_IMAGE_TAG\" && \
+#         docker stop movie-app || true && \
+#         docker rm movie-app || true && \
+#         docker run -d \
+#           --name movie-app \
+#           --label 'traefik.enable=true' \
+#           --label "traefik.http.routers.movie.rule=Host(\\`stream.kwadwolabs.cloud\\`)" \ 
+#           --label 'traefik.http.routers.movie.entrypoints=websecure' \
+#           --label 'traefik.http.routers.movie.tls.certresolver=myresolver' \
+#           --label 'traefik.http.services.movie.loadbalancer.server.port=80' \
+#           "\"\$REMOTE_IMAGE_NAME:\$REMOTE_IMAGE_TAG\""
+#       "
+
 deploy:
   stage: deploy
-  image: alpine:latest # better base image for ssh support
+  image: alpine:latest
   before_script:
     - apk add --no-cache openssh-client
     - mkdir -p ~/.ssh
-    - cp "$SSH_KEY" ~/.ssh/id_rsa
+    - echo "$SSH_KEY" > ~/.ssh/id_rsa
     - chmod 400 ~/.ssh/id_rsa
   script:
+    - echo "Copying docker-compose.yml and .env to server..."
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa docker-compose.yml root@$LINODE_SERVER:/root/movieapp/
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa .env root@$LINODE_SERVER:/root/movieapp/
     - echo "Deploying containerized app..."
-    # We will pass the necessary variables into the remote SSH session
     - |
       ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@$LINODE_SERVER "\
-        REMOTE_IMAGE_NAME='$IMAGE_NAME'; \
-        REMOTE_IMAGE_TAG='$IMAGE_TAG'; \
-        REMOTE_REGISTRY_USER='$REGISTRY_USER'; \
-        REMOTE_REGISTRY_PASS='$REGISTRY_PASS'; \
+        export IMAGE_NAME='$IMAGE_NAME'; \
+        export IMAGE_TAG='$IMAGE_TAG'; \
+        export REGISTRY_USER='$REGISTRY_USER'; \
+        export REGISTRY_PASS='$REGISTRY_PASS'; \
         \
-        docker login -u \"\$REMOTE_REGISTRY_USER\" -p \"\$REMOTE_REGISTRY_PASS\" && \
-        docker pull \"\$REMOTE_IMAGE_NAME:\$REMOTE_IMAGE_TAG\" && \
-        docker stop movie-app || true && \
-        docker rm movie-app || true && \
-        docker run -d \
-          --name movie-app \
-          --label 'traefik.enable=true' \
-          --label "traefik.http.routers.movie.rule=Host(\\`stream.kwadwolabs.cloud\\`)" \ 
-          --label 'traefik.http.routers.movie.entrypoints=websecure' \
-          --label 'traefik.http.routers.movie.tls.certresolver=myresolver' \
-          --label 'traefik.http.services.movie.loadbalancer.server.port=80' \
-          "\"\$REMOTE_IMAGE_NAME:\$REMOTE_IMAGE_TAG\""
+        cd /root/movieapp && \
+        docker login -u \"\$REGISTRY_USER\" -p \"\$REGISTRY_PASS\" && \
+        docker pull \"\$IMAGE_NAME:\$IMAGE_TAG\" && \
+        docker compose down -v || true && \
+        docker compose up -d
       "
