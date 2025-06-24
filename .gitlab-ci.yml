@@ -74,7 +74,7 @@ deploy:
   before_script:
     - apk add --no-cache openssh-client
     - mkdir -p ~/.ssh
-    - echo "$SSH_KEY" > ~/.ssh/id_rsa
+    - cp "$SSH_KEY" ~/.ssh/id_rsa
     - chmod 400 ~/.ssh/id_rsa
   script:
     - echo "Copying docker-compose.yml and .env to server..."
