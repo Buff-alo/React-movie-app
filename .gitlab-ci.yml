@@ -48,7 +48,7 @@ build:
 #     - echo "Deploying containerized app..."
 #     # We will pass the necessary variables into the remote SSH session
 #     - |
-#       ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@$LINODE_SERVER "\
+#       ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@$SERVER "\
 #         REMOTE_IMAGE_NAME='$IMAGE_NAME'; \
 #         REMOTE_IMAGE_TAG='$IMAGE_TAG'; \
 #         REMOTE_REGISTRY_USER='$REGISTRY_USER'; \
@@ -78,11 +78,11 @@ deploy:
     - chmod 400 ~/.ssh/id_rsa
   script:
     - echo "Copying docker-compose.yml and .env to server..."
-    - scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa docker-compose.yml root@$LINODE_SERVER:/root/movieapp/
-    - scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa .env root@$LINODE_SERVER:/root/movieapp/
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa docker-compose.yml root@$SERVER:/root/movieapp/
+    - scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa .env root@$SERVER:/root/movieapp/
     - echo "Deploying containerized app..."
     - |
-      ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@$LINODE_SERVER "\
+      ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa root@$SERVER "\
         export IMAGE_NAME='$IMAGE_NAME'; \
         export IMAGE_TAG='$IMAGE_TAG'; \
         export REGISTRY_USER='$REGISTRY_USER'; \
