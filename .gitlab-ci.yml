@@ -6,21 +6,21 @@ stages:
   - build
   - deploy
 
-build:
-  stage: build
-  image: docker:latest
-  services:
-    - docker:dind
-  variables:
-    DOCKER_TLS_CERTDIR: "/certs"
-  before_script:
-    - echo "Logging in to Docker registry..."
-    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS
-  script:
-    - echo "Building Docker image..."
-    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
-    - echo "Pushing Docker image to registry..."
-    - docker push $IMAGE_NAME:$IMAGE_TAG
+# build:
+#   stage: build
+#   image: docker:latest
+#   services:
+#     - docker:dind
+#   variables:
+#     DOCKER_TLS_CERTDIR: "/certs"
+#   before_script:
+#     - echo "Logging in to Docker registry..."
+#     - docker login -u $REGISTRY_USER -p $REGISTRY_PASS
+#   script:
+#     - echo "Building Docker image..."
+#     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+#     - echo "Pushing Docker image to registry..."
+#     - docker push $IMAGE_NAME:$IMAGE_TAG
 
 # debug_ssh:
 #   stage: deploy
@@ -114,6 +114,6 @@ deploy:
     # Create kubeconfig file from env var
     - echo "$KUBE_CONFIG" | base64 -d > kubeconfig
     - export KUBECONFIG=$PWD/kubeconfig
-    - kubectl version --short
+    - kubectl version
     - sed -i "s|IMAGE_PLACEHOLDER|$IMAGE|g" k8s/deployment.yaml
     - kubectl apply -f k8s/
