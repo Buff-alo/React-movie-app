@@ -101,10 +101,15 @@ deploy:
     - deploy
     - kls
   image:
-    name: rancher/kubectl:v1.33.5
+    name: alpine:latest
     entrypoint: [""]
   variables:
     IMAGE: "$IMAGE_NAME:$IMAGE_TAG"  
+  before_script:
+    - apk add --no-cache curl
+    - curl -LO "https://dl.k8s.io/release/v1.32.0/bin/linux/amd64/kubectl"
+    - chmod +x kubectl
+    - mv kubectl /usr/local/bin/
   script:
     # Create kubeconfig file from env var
     - echo "$KUBE_CONFIG" | base64 -d > kubeconfig
