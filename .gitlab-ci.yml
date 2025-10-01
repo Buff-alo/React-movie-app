@@ -97,6 +97,9 @@ build:
 
 deploy:
   stage: deploy
+  tags:
+    - deploy
+    - kls
   image:
     name: rancher/kubectl:v1.32
     entrypoint: [""]
