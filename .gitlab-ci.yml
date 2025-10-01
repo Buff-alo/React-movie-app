@@ -98,7 +98,7 @@ build:
 deploy:
   stage: deploy
   image:
-    name: bitnami/kubectl:1.30
+    name: bitnami/kubectl:latest
     entrypoint: [""]
   variables:
     IMAGE: "$IMAGE_NAME:$IMAGE_TAG"  
