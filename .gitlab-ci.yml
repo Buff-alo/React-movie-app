@@ -101,7 +101,7 @@ deploy:
     - deploy
     - kls
   image:
-    name: rancher/kubectl:v1.32
+    name: rancher/kubectl:v1.33.5
     entrypoint: [""]
   variables:
     IMAGE: "$IMAGE_NAME:$IMAGE_TAG"  
