@@ -6,21 +6,38 @@ stages:
   - build
   - deploy
 
+  
 build:
   stage: build
-  image: docker:latest
-  services:
-    - docker:dind
+  image: quay.io/buildah/stable:latest
   variables:
-    DOCKER_TLS_CERTDIR: "/certs"
+    STORAGE_DRIVER: vfs
+    BUILDAH_FORMAT: docker
   before_script:
-    - echo "Logging in to Docker registry..."
-    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS
+    - buildah login -u "$REGISTRY_USER" -p "$REGISTRY_PASS" docker.io
   script:
-    - echo "Building Docker image..."
-    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
-    - echo "Pushing Docker image to registry..."
-    - docker push $IMAGE_NAME:$IMAGE_TAG
+    - |
+      # Create manifest list
+      buildah manifest create $IMAGE_NAME:$IMAGE_TAG
+      
+      # Build and add amd64
+      buildah bud \
+        --arch=amd64 \
+        --timestamp 0 \
+        --manifest $IMAGE_NAME:$IMAGE_TAG \
+        -f docker/Dockerfile .
+      
+      # Build and add arm64
+      buildah bud \
+        --arch=arm64 \
+        --timestamp 0 \
+        --manifest $IMAGE_NAME:$IMAGE_TAG \
+        -f docker/Dockerfile .
+      
+      # Push the manifest list
+      buildah manifest push --all \
+        $IMAGE_NAME:$IMAGE_TAG \
+        docker://$IMAGE_NAME:$IMAGE_TAG
 
 # debug_ssh:
 #   stage: deploy
