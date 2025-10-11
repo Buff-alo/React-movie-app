@@ -14,9 +14,11 @@ spec:
       labels:
         app: movie-app
     spec:
+      imagePullSecrets:
+        - name: docker-registry-secret
       containers:
-      - name: movie-app
-        image: IMAGE_PLACEHOLDER
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 80
+        - name: movie-app
+          image: IMAGE_PLACEHOLDER
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
