@@ -32,7 +32,7 @@ build:
         --arch=arm64 \
         --timestamp 0 \
         --manifest $IMAGE_NAME:$IMAGE_TAG \
-        -f docker/Dockerfile .
+        -f Dockerfile .
       
       # Push the manifest list
       buildah manifest push --all \
